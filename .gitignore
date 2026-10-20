@@ -1,0 +1,21 @@
+# Python environments and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Machine-learning artifacts
+models/
+results/
+wandb/
+
+# Downloaded organizer material is reproducible with scripts/fetch_official_assets.py.
+data/raw/*
+!data/raw/.gitkeep
+.cache/official_dico_nli/
+
+# Local configuration
+.env
