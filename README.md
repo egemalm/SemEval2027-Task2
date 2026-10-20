@@ -18,7 +18,7 @@ directions. This makes the submitted labels compatible with the directional
 structure whenever a complete `pair_id` is present, while still allowing the
 model to identify negative pairs.
 
-## Quick start
+## Quick start: macOS / Linux
 
 The organizer requires Python 3.10+. This project was set up with Python 3.12
 on macOS.
@@ -39,6 +39,36 @@ The default model is `microsoft/deberta-v3-base`, selected because the task's
 published pilot reports its DeBERTa v3 encoder-only baseline as the strongest
 of its representative models. A GPU is useful but not required; the training
 script selects CUDA, then Apple MPS, then CPU by default.
+
+## Quick start: Windows PowerShell
+
+Windows does not include GNU `make`, so run the PowerShell bootstrap from the
+repository root instead. First install Python 3.10+ from
+[python.org](https://www.python.org/downloads/); Python 3.12 is recommended.
+
+```powershell
+py -3.12 --version
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap_windows.ps1
+.\.venv\Scripts\python.exe -m pytest
+```
+
+The bootstrap creates `.venv`, installs all dependencies, and fetches the
+public English train/dev data plus the official scorer. To use an already
+available Python executable instead of the Windows Python launcher:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap_windows.ps1 -Python python
+```
+
+Train from PowerShell with:
+
+```powershell
+.\.venv\Scripts\python.exe -m dico_nli.train --train-file data/raw/train/dico_nli_train_track1_participant_labeled.csv --dev-file data/raw/dev/dico_nli_dev_track1_participant_labeled.csv --reference-file data/raw/dev/dico_nli_dev_track1_reference.csv --output-dir results/deberta-v3-base
+```
+
+If PowerShell reports that script execution is disabled, use the command above
+exactly; `-ExecutionPolicy Bypass` applies only to that invocation and does not
+change the machine-wide policy.
 
 ## Commands
 
@@ -93,6 +123,7 @@ organizer scorer:
 ```text
 src/dico_nli/       Training, inference, validation, joint decoding, scoring
 scripts/            Pinned organizer-asset fetcher
+scripts/bootstrap_windows.ps1  Windows setup without GNU Make
 tests/              Fast, model-free checks of task-critical logic
 data/raw/           Ignored downloaded Track 1 data
 results/, models/   Ignored experiment artifacts
