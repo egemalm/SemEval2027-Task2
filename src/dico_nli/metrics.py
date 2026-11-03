@@ -17,13 +17,26 @@ def score_predictions(reference_file: str | Path, predictions: pd.DataFrame) -> 
     The organizer evaluator remains authoritative. This implementation is kept
     small and is used during training to select checkpoints every epoch.
     """
-    reference = pd.read_csv(reference_file, keep_default_na=False)
-    required_reference = {"instance_id", "label", "reverse_pair_id"}
+    reference = pd.read_csv(reference_file, keep_default_na=False, dtype=str)
+    required_reference = {"instance_id", "pair_id", "label", "reverse_pair_id"}
     missing = required_reference - set(reference.columns)
     if missing:
         raise ValueError(f"Reference file is missing columns: {sorted(missing)}")
-    if list(predictions.columns) != ["instance_id", "label"]:
+    if set(predictions.columns) != {"instance_id", "label"} or len(predictions.columns) != 2:
         raise ValueError("Predictions must have exactly: instance_id,label")
+    if reference.empty or predictions.empty:
+        raise ValueError("Reference and predictions must not be empty.")
+    if set(reference["label"]) - set(LABELS):
+        raise ValueError("Reference includes an unknown task label.")
+    for frame, columns in (
+        (reference, ("instance_id", "pair_id")),
+        (predictions, ("instance_id",)),
+    ):
+        for column in columns:
+            if frame[column].str.contains(r"\s|^$", regex=True).any():
+                raise ValueError(
+                    f"Invalid {column}: identifiers must be nonempty without whitespace."
+                )
     if reference["instance_id"].duplicated().any() or predictions["instance_id"].duplicated().any():
         raise ValueError("Reference and predictions must have unique instance_id values.")
     if set(predictions["label"]) - set(LABELS):
@@ -54,9 +67,13 @@ def score_predictions(reference_file: str | Path, predictions: pd.DataFrame) -> 
         reverse_id = row.reverse_pair_id
         if not reverse_id or row.instance_id in visited:
             continue
+        if reverse_id == row.instance_id:
+            raise ValueError("An instance cannot be its own reverse_pair_id.")
         if reverse_id not in gold_by_id.index:
             raise ValueError(f"Unknown reverse_pair_id: {reverse_id}")
         reverse_row = gold_by_id.loc[reverse_id]
+        if reverse_row.pair_id != row.pair_id:
+            raise ValueError("Reversed instances must have the same pair_id.")
         if reverse_row.reverse_pair_id != row.instance_id:
             raise ValueError(f"Non-reciprocal pair: {row.instance_id} <-> {reverse_id}")
         if row.label not in REVERSAL_MAP or reverse_row.label != REVERSAL_MAP[row.label]:

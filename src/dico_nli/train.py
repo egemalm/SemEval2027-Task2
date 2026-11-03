@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
+import os
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -23,10 +24,19 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-from .data import PairDataset, load_examples
+from .data import PairDataset, load_examples, validate_split_integrity
 from .decode import decode_logits
+from .experiments import (
+    capture_environment,
+    create_run,
+    dataset_provenance,
+    fingerprint,
+    training_log,
+    write_json,
+)
 from .labels import ID_TO_LABEL, LABELS
 from .metrics import score_predictions
+from .score import run_official_scorer
 
 
 def parse_args() -> argparse.Namespace:
@@ -34,8 +44,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-file", type=Path, required=True)
     parser.add_argument("--dev-file", type=Path, required=True)
     parser.add_argument("--reference-file", type=Path, help="Matching organizer dev reference CSV.")
-    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("results/experiments"),
+        help="Parent directory; each invocation creates a unique run subdirectory.",
+    )
     parser.add_argument("--model-name", default="microsoft/deberta-v3-base")
+    parser.add_argument("--model-revision", default="main")
+    parser.add_argument("--official-cache", type=Path, default=Path(".cache/official_dico_nli"))
+    parser.add_argument("--run-kind", choices=("training", "cpu_smoke"), default="training")
+    parser.add_argument(
+        "--deterministic",
+        action="store_true",
+        help="Require deterministic Torch operations; unsupported kernels fail.",
+    )
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--patience", type=int, default=3)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
@@ -66,20 +89,24 @@ def select_device(requested: str) -> torch.device:
     if requested == "auto":
         requested = next(name for name in ("cuda", "mps", "cpu") if available[name])
     if not available[requested]:
-        raise RuntimeError(f"Requested device '{requested}' is not available.")
+        raise RuntimeError(
+            f"Requested device '{requested}' is not available. "
+            "Check the PyTorch/driver installation or select --device cpu."
+        )
     return torch.device(requested)
 
 
-def set_seed(seed: int) -> None:
+def set_seed(seed: int, deterministic: bool = False) -> None:
+    if deterministic:
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-
-
-def write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    torch.use_deterministic_algorithms(deterministic)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = deterministic
 
 
 def move_batch_to_device(
@@ -104,17 +131,19 @@ def predict_logits(
 
 
 def build_predictions(frame: pd.DataFrame, logits: np.ndarray, strategy: str) -> pd.DataFrame:
-    return pd.DataFrame({
-        "instance_id": frame["instance_id"],
-        "label": decode_logits(frame, logits, strategy=strategy),
-    })
+    return pd.DataFrame(
+        {
+            "instance_id": frame["instance_id"],
+            "label": decode_logits(frame, logits, strategy=strategy),
+        }
+    )
 
 
 def score_dev(
     dev_frame: pd.DataFrame,
     predictions: pd.DataFrame,
     reference_file: Path | None,
-) -> dict[str, float | int]:
+) -> dict:
     if reference_file is not None:
         return score_predictions(reference_file, predictions)
     weighted_f1 = float(
@@ -126,7 +155,7 @@ def score_dev(
             zero_division=0,
         )
     )
-    return {"weighted_f1": weighted_f1, "soft_cons": 0.0, "hard_cons": 0.0, "mean3": weighted_f1}
+    return {"weighted_f1": weighted_f1, "soft_cons": None, "hard_cons": None, "mean3": None}
 
 
 def calculate_class_weights(frame: pd.DataFrame, enabled: bool) -> torch.Tensor | None:
@@ -140,25 +169,80 @@ def calculate_class_weights(frame: pd.DataFrame, enabled: bool) -> torch.Tensor 
     )
 
 
-def main() -> None:
-    args = parse_args()
+def run_training(args: argparse.Namespace, run_dir: Path, config: dict) -> None:
     if args.epochs < 1 or args.patience < 1 or args.batch_size < 1:
         raise ValueError("epochs, patience, and batch-size must be positive.")
     if not 0 <= args.warmup_ratio < 1:
         raise ValueError("warmup-ratio must be in [0, 1).")
+    if args.max_length < 1 or args.num_workers < 0 or args.learning_rate <= 0:
+        raise ValueError("max-length/lr must be positive; num-workers must be nonnegative.")
     if args.selection_metric != "weighted_f1" and args.reference_file is None:
         raise ValueError("A reference file is required for consistency-aware checkpoint selection.")
 
-    set_seed(args.seed)
+    set_seed(args.seed, args.deterministic)
     device = select_device(args.device)
     train_frame = load_examples(args.train_file, require_labels=True)
     dev_frame = load_examples(args.dev_file, require_labels=True)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    best_model_dir = args.output_dir / "best_model"
+    split_audit = validate_split_integrity(train_frame, dev_frame)
+    write_json(run_dir / "split_audit.json", split_audit)
+    best_model_dir = run_dir / "best_model"
+    config.update(capture_environment(run_dir, device))
+    config["datasets"] = {
+        "train": dataset_provenance(args.train_file),
+        "dev": dataset_provenance(args.dev_file),
+    }
+    if args.reference_file:
+        config["datasets"]["dev_reference"] = dataset_provenance(args.reference_file)
+        scorer_dir = args.official_cache / "evaluation_functions"
+        if not (scorer_dir / "__main__.py").is_file():
+            raise FileNotFoundError(
+                "Official scorer missing. Run scripts/fetch_official_assets.py "
+                "--include-scorer before training."
+            )
+        config["official_scorer_files"] = {
+            p.name: fingerprint(p)["sha256"] for p in sorted(scorer_dir.glob("*.py"))
+        }
+        manifest = args.official_cache / "provenance.json"
+        if manifest.is_file():
+            provenance = json.loads(manifest.read_text(encoding="utf-8"))
+            config["official_scorer_provenance"] = provenance
+            for name, digest in config["official_scorer_files"].items():
+                declared = provenance["files"].get(f"evaluation_functions/{name}", {})
+                if declared.get("sha256") != digest:
+                    raise ValueError(
+                        f"Cached official scorer {name} differs from its provenance. "
+                        "Inspect and re-fetch before training."
+                    )
+        # Validate the matching reference before downloading/loading model weights.
+        score_predictions(args.reference_file, dev_frame[["instance_id", "label"]])
+        reference = pd.read_csv(args.reference_file, dtype=str, keep_default_na=False)
+        aligned = reference.set_index("instance_id").loc[dev_frame.instance_id]
+        for column in ("label", "text1", "text2", "pair_id"):
+            if column in aligned and column in dev_frame:
+                if aligned[column].tolist() != dev_frame[column].tolist():
+                    raise ValueError(f"Development reference {column} does not match dev examples.")
+    write_json(run_dir / "run_config.json", config)
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=True)
+    # Resolve a mutable model reference once, then load tokenizer and weights from that commit.
+    from transformers import AutoConfig
+
+    model_config = AutoConfig.from_pretrained(args.model_name, revision=args.model_revision)
+    resolved_revision = getattr(model_config, "_commit_hash", None)
+    config["resolved_model_revision"] = resolved_revision or "local_snapshot"
+    if Path(args.model_name).is_dir():
+        config["local_model_files"] = {
+            str(p.relative_to(args.model_name)): fingerprint(p)["sha256"]
+            for p in sorted(Path(args.model_name).rglob("*"))
+            if p.is_file()
+        }
+    load_revision = resolved_revision or args.model_revision
+    write_json(run_dir / "run_config.json", config)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model_name, revision=load_revision, use_fast=True
+    )
     model = AutoModelForSequenceClassification.from_pretrained(
         args.model_name,
+        revision=load_revision,
         num_labels=len(LABELS),
         id2label=ID_TO_LABEL,
         label2id={label: index for index, label in ID_TO_LABEL.items()},
@@ -188,20 +272,16 @@ def main() -> None:
     weights = calculate_class_weights(train_frame, args.class_weight == "balanced")
     loss_function = CrossEntropyLoss(weight=weights.to(device) if weights is not None else None)
 
-    config = vars(args).copy()
     config.update(
         {
-            "started_at": datetime.now(timezone.utc).isoformat(),
-            "device": str(device),
             "label_order": list(LABELS),
             "train_rows": len(train_frame),
             "dev_rows": len(dev_frame),
+            "checkpoint_location": str(best_model_dir.resolve()),
         }
     )
-    config = {
-        key: str(value) if isinstance(value, Path) else value for key, value in config.items()
-    }
-    write_json(args.output_dir / "run_config.json", config)
+    write_json(run_dir / "run_config.json", config)
+    print(f"Run: {run_dir} | device={device} | kind={args.run_kind}")
 
     best_score = float("-inf")
     best_epoch = 0
@@ -216,6 +296,8 @@ def main() -> None:
             optimizer.zero_grad(set_to_none=True)
             logits = model(**batch).logits
             loss = loss_function(logits, targets)
+            if not torch.isfinite(loss):
+                raise RuntimeError("Training loss is non-finite. Inspect inputs and learning rate.")
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
@@ -231,18 +313,8 @@ def main() -> None:
             **metrics,
         }
         history.append(epoch_record)
-        write_json(args.output_dir / "metrics_history.json", {"epochs": history})
-        print(
-            "epoch={epoch} loss={loss:.4f} weighted_f1={weighted:.4f} soft_cons={soft:.4f} "
-            "hard_cons={hard:.4f} mean3={mean3:.4f}".format(
-                epoch=epoch,
-                loss=epoch_record["train_loss"],
-                weighted=metrics["weighted_f1"],
-                soft=metrics["soft_cons"],
-                hard=metrics["hard_cons"],
-                mean3=metrics["mean3"],
-            )
-        )
+        write_json(run_dir / "metrics_history.json", {"epochs": history})
+        print(json.dumps(epoch_record, sort_keys=True))
 
         score = float(metrics[args.selection_metric])
         if score > best_score:
@@ -251,23 +323,83 @@ def main() -> None:
             epochs_without_improvement = 0
             model.save_pretrained(best_model_dir)
             tokenizer.save_pretrained(best_model_dir)
-            write_json(args.output_dir / "best_metrics.json", epoch_record)
+            write_json(
+                best_model_dir / "inference_config.json",
+                {"max_length": args.max_length, "label_order": list(LABELS)},
+            )
+            write_json(run_dir / "best_metrics.json", epoch_record)
         else:
             epochs_without_improvement += 1
             if epochs_without_improvement >= args.patience:
                 print(f"Early stopping after epoch {epoch}; best epoch was {best_epoch}.")
                 break
 
+    # Release the training model and optimizer before reloading the checkpoint.
+    del model, optimizer, scheduler, loss, logits
+    gc.collect()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+    elif device.type == "mps":
+        torch.mps.empty_cache()
     best_model = AutoModelForSequenceClassification.from_pretrained(best_model_dir).to(device)
     final_logits = predict_logits(best_model, dev_loader, device)
+    np.save(run_dir / "dev_logits.npy", final_logits)
+    for strategy in ("independent", "joint"):
+        paired_predictions = build_predictions(dev_frame, final_logits, strategy)
+        prediction_path = run_dir / f"predictions_dev_{strategy}.csv"
+        paired_predictions.to_csv(prediction_path, index=False, lineterminator="\n")
+        local = score_dev(dev_frame, paired_predictions, args.reference_file)
+        write_json(run_dir / f"dev_metrics_{strategy}.json", local)
+        if args.reference_file:
+            official = run_official_scorer(
+                args.official_cache,
+                args.reference_file,
+                prediction_path,
+                run_dir / f"official_{strategy}",
+            )
+            for metric in ("weighted_f1", "soft_cons", "hard_cons"):
+                if not np.isclose(local[metric], official[metric], rtol=0, atol=1e-12):
+                    raise RuntimeError(f"Local/official scorer mismatch for {metric}.")
     final_predictions = build_predictions(dev_frame, final_logits, args.decode)
-    final_predictions.to_csv(
-        args.output_dir / "predictions_dev.csv", index=False, lineterminator="\n"
-    )
+    final_predictions.to_csv(run_dir / "predictions_dev.csv", index=False, lineterminator="\n")
     final_metrics = score_dev(dev_frame, final_predictions, args.reference_file)
-    write_json(args.output_dir / "dev_metrics.json", final_metrics)
-    print(f"Saved best epoch {best_epoch} and {args.output_dir / 'predictions_dev.csv'}")
+    write_json(run_dir / "dev_metrics.json", final_metrics)
+    print(f"Saved best epoch {best_epoch} and {run_dir / 'predictions_dev.csv'}")
     print(json.dumps(final_metrics, indent=2, sort_keys=True))
+
+
+def main() -> None:
+    args = parse_args()
+    run_dir = create_run(args.output_dir)
+    config = {
+        **vars(args),
+        "run_id": run_dir.name,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+    }
+    write_json(run_dir / "run_config.json", config)
+    write_json(run_dir / "status.json", {"status": "running", "run_kind": args.run_kind})
+    with training_log(run_dir):
+        try:
+            run_training(args, run_dir, config)
+        except BaseException as error:
+            import traceback
+
+            traceback.print_exc()
+            write_json(run_dir / "status.json", {"status": "failed", "error": str(error)})
+            if isinstance(error, RuntimeError) and "out of memory" in str(error).lower():
+                print(
+                    "Device memory exhausted. Retry with --batch-size 4 (or 1), "
+                    "--max-length 64, or --device cpu."
+                )
+            raise
+        write_json(
+            run_dir / "status.json",
+            {
+                "status": "completed",
+                "run_kind": args.run_kind,
+                "finished_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
 
 
 if __name__ == "__main__":

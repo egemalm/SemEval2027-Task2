@@ -30,6 +30,8 @@ def decode_logits(frame: pd.DataFrame, logits: np.ndarray, *, strategy: str = "j
     logits = np.asarray(logits)
     if logits.ndim != 2 or logits.shape[1] != len(LABELS):
         raise ValueError(f"Expected logits with shape (n, {len(LABELS)}), got {logits.shape}.")
+    if not np.isfinite(logits).all():
+        raise ValueError("Logits must contain finite values.")
 
     labels = [ID_TO_LABEL[int(index)] for index in np.argmax(logits, axis=1)]
     if strategy == "independent":
@@ -48,6 +50,13 @@ def decode_logits(frame: pd.DataFrame, logits: np.ndarray, *, strategy: str = "j
         if len(indices) != 2:
             continue
         first, second = indices
+        # pair_id alone is not evidence that two arbitrary rows are reversals.
+        a, b = frame.iloc[first], frame.iloc[second]
+        if a.text1 != b.text2 or a.text2 != b.text1:
+            continue
+        if "text1_lang" in frame and "text2_lang" in frame:
+            if a.text1_lang != b.text2_lang or a.text2_lang != b.text1_lang:
+                continue
         assignment_scores = [
             logits[first, LABEL_TO_ID[first_label]] + logits[second, LABEL_TO_ID[second_label]]
             for first_label, second_label in JOINT_ASSIGNMENTS

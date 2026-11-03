@@ -27,16 +27,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_official_scorer(cache: Path, reference: Path, prediction: Path, output_dir: Path) -> None:
+def run_official_scorer(cache: Path, reference: Path, prediction: Path, output_dir: Path) -> dict:
     package = cache / "evaluation_functions" / "__main__.py"
     if not package.is_file():
-        raise FileNotFoundError(
-            f"Official scorer not found in {cache}. Run: make fetch-data"
+        raise FileNotFoundError(f"Official scorer not found in {cache}. Run: make fetch-data")
+    if (output_dir / "scores.json").exists() or (output_dir / "scores.txt").exists():
+        raise FileExistsError(
+            f"Official scores already exist in {output_dir}; choose a new directory."
         )
     output_dir.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
-    environment["PYTHONPATH"] = str(cache) + os.pathsep + environment.get("PYTHONPATH", "")
-    subprocess.run(
+    environment["PYTHONPATH"] = (
+        str(cache.resolve()) + os.pathsep + environment.get("PYTHONPATH", "")
+    )
+    result = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -48,14 +52,18 @@ def run_official_scorer(cache: Path, reference: Path, prediction: Path, output_d
             "--output-dir",
             str(output_dir),
         ],
-        check=True,
         env=environment,
+        capture_output=True,
+        text=True,
     )
+    if result.returncode:
+        raise RuntimeError(f"Official scorer failed: {result.stderr or result.stdout}")
+    return json.loads((output_dir / "scores.json").read_text(encoding="utf-8"))
 
 
 def main() -> None:
     args = parse_args()
-    predictions = pd.read_csv(args.prediction_file, keep_default_na=False)
+    predictions = pd.read_csv(args.prediction_file, keep_default_na=False, dtype=str)
     report = score_predictions(args.reference_file, predictions)
     print(json.dumps(report, indent=2, sort_keys=True))
     if args.official_cache is not None:

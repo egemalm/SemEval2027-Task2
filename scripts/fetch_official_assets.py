@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import argparse
-import shutil
+import hashlib
+import json
 import sys
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -22,6 +23,8 @@ TRACK1_FILES = (
     "final_data/dev/dico_nli_dev_track1_submission_template.csv",
 )
 SCORER_FILES = (
+    "LICENSE",
+    "evaluation_functions/README.md",
     "evaluation_functions/__init__.py",
     "evaluation_functions/__main__.py",
     "evaluation_functions/aggregation.py",
@@ -37,20 +40,24 @@ SCORER_FILES = (
 )
 
 
-def download(url: str, destination: Path, *, force: bool) -> None:
-    if destination.exists() and not force:
-        print(f"exists  {destination}")
-        return
+def download(url: str, destination: Path, *, force: bool) -> dict:
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(destination.name + ".part")
     try:
-        with urlopen(url, timeout=30) as response, temporary.open("wb") as handle:
-            shutil.copyfileobj(response, handle)
+        with urlopen(url, timeout=30) as response:
+            content = response.read()
     except (HTTPError, URLError, OSError) as error:
         temporary.unlink(missing_ok=True)
         raise RuntimeError(f"Could not download {url}: {error}") from error
-    temporary.replace(destination)
-    print(f"fetched  {destination}")
+    if destination.exists() and not force:
+        if destination.read_bytes() != content:
+            raise RuntimeError(f"{destination} differs from {url}; inspect before using --force.")
+        print(f"verified {destination}")
+    else:
+        temporary.write_bytes(content)
+        temporary.replace(destination)
+        print(f"fetched  {destination}")
+    return {"url": url, "sha256": hashlib.sha256(content).hexdigest()}
 
 
 def parse_args() -> argparse.Namespace:
@@ -68,12 +75,23 @@ def main() -> None:
     paths = list(TRACK1_FILES)
     if args.include_scorer:
         paths.extend(SCORER_FILES)
+    manifests = {"data": {}, "scorer": {}}
     for source_path in paths:
-        is_scorer = source_path.startswith("evaluation_functions/")
+        is_scorer = source_path in SCORER_FILES
         target_root = args.scorer_dir if is_scorer else args.data_dir
         relative = source_path if is_scorer else source_path.removeprefix("final_data/")
         url = f"{RAW_BASE}/{args.revision}/{source_path}"
-        download(url, target_root / relative, force=args.force)
+        manifests["scorer" if is_scorer else "data"][relative] = download(
+            url, target_root / relative, force=args.force
+        )
+    for kind, root in (("data", args.data_dir), ("scorer", args.scorer_dir)):
+        if manifests[kind]:
+            payload = {
+                "repository": OFFICIAL_REPOSITORY,
+                "revision": args.revision,
+                "files": manifests[kind],
+            }
+            (root / "provenance.json").write_text(json.dumps(payload, indent=2) + "\n")
     print(f"Official source: {OFFICIAL_REPOSITORY} @ {args.revision}")
 
 

@@ -19,3 +19,10 @@ data/raw/*
 
 # Local configuration
 .env
+.env.*
+!.env.example
+.cache/
+*.safetensors
+*.pt
+*.pth
+.DS_Store

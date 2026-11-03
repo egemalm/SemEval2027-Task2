@@ -32,12 +32,16 @@ if ($VersionOutput -notmatch "Python 3\.(1[0-9]|[2-9][0-9])") {
 }
 
 & $Python @LauncherArguments -m venv .venv
+if ($LASTEXITCODE -ne 0) { throw "Virtual environment creation failed." }
 $VenvPython = Join-Path $RepositoryRoot ".venv\Scripts\python.exe"
 & $VenvPython -m pip install --upgrade pip
+if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
 & $VenvPython -m pip install -e ".[dev]"
+if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed." }
 
 if (-not $SkipData) {
     & $VenvPython scripts\fetch_official_assets.py --include-scorer
+    if ($LASTEXITCODE -ne 0) { throw "Official asset download failed." }
 }
 
 Write-Host "Setup complete. Verify it with: .\.venv\Scripts\python.exe -m pytest"
