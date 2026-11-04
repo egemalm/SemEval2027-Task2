@@ -7,7 +7,7 @@ DEV_REF := data/raw/dev/dico_nli_dev_track1_reference.csv
 OUTPUT_DIR ?= results/experiments
 TRAIN_ARGS ?=
 
-.PHONY: setup fetch-data test lint train-dev score-dev compare
+.PHONY: setup fetch-data test lint train-dev score-dev compare analyze-saved
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -38,3 +38,6 @@ score-dev:
 
 compare:
 	$(VENV_PYTHON) -m dico_nli.compare --results-dir $(OUTPUT_DIR)
+
+analyze-saved:
+	$(VENV_PYTHON) scripts/analyze_saved_runs.py

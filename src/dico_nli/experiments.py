@@ -104,17 +104,35 @@ def capture_environment(run_dir: Path, device: torch.device) -> dict:
 
 
 class _Tee:
+    """Non-owning console proxy; training_log owns the lifetime of the log file.
+
+    Third-party logging handlers may retain this proxy after redirection ends,
+    then flush or close it at interpreter shutdown. Those calls must neither
+    access a closed log file nor close the original console stream.
+    """
+
     def __init__(self, original, log):
         self.original, self.log = original, log
 
     def write(self, value):
-        self.original.write(value)
-        self.log.write(value)
-        self.log.flush()
+        count = self.original.write(value)
+        if not self.log.closed:
+            self.log.write(value)
+            self.log.flush()
+        return count
 
     def flush(self):
-        self.original.flush()
-        self.log.flush()
+        if not getattr(self.original, "closed", False):
+            self.original.flush()
+        if not self.log.closed:
+            self.log.flush()
+
+    def close(self):
+        # The console and log file belong to their respective outer contexts.
+        self.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.original, name)
 
 
 @contextmanager

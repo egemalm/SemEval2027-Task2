@@ -5,6 +5,10 @@ DiCo-NLI — English (Track 1)**. It trains a Hugging Face sequence classifier
 on the organizer's released English phrase pairs, then jointly decodes each
 source-pair's two directions.
 
+Taking over the project? Start with [the handoff](docs/HANDOFF.md), which records
+the two completed Colab runs, current best result, known limitations and next steps.
+Their small prediction/score snapshots and analysis reports are included in Git.
+
 The task has four labels:
 
 - `EQUIVALENCE` reverses to itself.
@@ -166,6 +170,11 @@ Use the saved configuration diff to inspect every change between runs. Results
 and snapshots stay ignored by Git; copy the whole run folder to persistent
 storage when using temporary Colab disks.
 
+The two completed seed-42 runs have curated, immutable evidence snapshots under
+[`docs/experiments/`](docs/experiments/README.md). To verify their saved predictions
+and regenerate the error analyses on CPU, run `make analyze-saved` after fetching
+the official assets. This does not train a model or require model weights.
+
 ## Prediction and scoring
 
 Predict an organizer-supplied unlabeled test file:
@@ -254,7 +263,7 @@ src/dico_nli/       Training, inference, validation, joint decoding, scoring
 scripts/            Pinned asset fetcher and Windows bootstrap
 tests/              Unit tests, official scorer parity, tiny offline CPU run
 AGENTS.md           Repository-specific development instructions
-docs/               Audit evidence, limitations, and readiness report
+docs/               Handoff, audits, analyses, and curated experiment evidence
 requirements-lock.txt  Optional validated environment constraints
 data/raw/           Ignored downloaded Track 1 data
 results/, models/   Ignored experiment artifacts

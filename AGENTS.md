@@ -17,7 +17,7 @@ rewrites, duplicate pipelines, unnecessary abstractions, or new tracking service
   SoftCons/HardCons gold-pair denominators; negative predictions on reversible gold
   pairs do not count as soft-consistent.
 - Preserve all submission IDs, row counts, and the exact instance_id,label format.
-- Never fabricate scores, experiments, hardware checks, or push results. Identify
+- Never fabricate scores, experiments, hardware checks, or publication reports. Identify
   synthetic smoke tests explicitly; perfect-gold scoring is only a scorer check.
 - Save actual runs in unique results/experiments subdirectories, including exact
   config, model revision, seed, input hashes/provenance, Git state, source snapshot,
@@ -30,5 +30,8 @@ rewrites, duplicate pipelines, unnecessary abstractions, or new tracking service
   serious GPU experiments unless requested. Report checks that could not run.
 - Keep downloaded data/scorers, weights, environments, credentials, and results
   untracked. Review git diff and git status before any commit.
+  The user explicitly authorized the small handoff evidence snapshots under
+  docs/experiments/ and reports under docs/analysis/ to be tracked. Preserve these;
+  generated analyses still go under ignored results/, and checkpoints stay external.
 - Never push or publish changes without explicit user permission. Prior pushes in
   this conversation do not authorize future publication.

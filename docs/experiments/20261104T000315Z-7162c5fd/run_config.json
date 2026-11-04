@@ -1,0 +1,250 @@
+{
+  "batch_size": 8,
+  "checkpoint_location": "/content/drive/MyDrive/DiCoNLI/experiments/20261104T000315Z-7162c5fd/best_model",
+  "class_weight": "none",
+  "datasets": {
+    "dev": {
+      "path": "/content/SemEval2027-Task2/data/raw/dev/dico_nli_dev_track1_participant_labeled.csv",
+      "sha256": "80b7152f7ccf0d349d42ad2f098988106689b918b36337e5756b121d17513511",
+      "upstream_manifest": {
+        "files": {
+          "dev/dico_nli_dev_track1_participant_labeled.csv": {
+            "sha256": "80b7152f7ccf0d349d42ad2f098988106689b918b36337e5756b121d17513511",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_participant_labeled.csv"
+          },
+          "dev/dico_nli_dev_track1_reference.csv": {
+            "sha256": "8d5cd11c1c60df3c9b59254d12a60fb2cf43e91dde01b46c8a8f296b806134bc",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_reference.csv"
+          },
+          "dev/dico_nli_dev_track1_submission_template.csv": {
+            "sha256": "28541a99b346cb7ab514b76bbf37d95e86be26bb3679c040fd1ab538824baa52",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_submission_template.csv"
+          },
+          "train/dico_nli_train_track1_participant_labeled.csv": {
+            "sha256": "5e8dd9f3a7e000933fec3c9e64d064f9a25586f141f58d6e6afb47c4fc797211",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_participant_labeled.csv"
+          },
+          "train/dico_nli_train_track1_reference.csv": {
+            "sha256": "c8f4d8587711e0beaefc115606e5c29c3e78dc6660e074967428af0fed069ee4",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_reference.csv"
+          },
+          "train/dico_nli_train_track1_submission_template.csv": {
+            "sha256": "d38ee22049b79fd2030a96fca68c7df4f04ef37aac91a6868b2dc6e9661905e8",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_submission_template.csv"
+          }
+        },
+        "repository": "https://github.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI",
+        "revision": "588968e610197ddc4c440314701cbc587afc4c1b"
+      }
+    },
+    "dev_reference": {
+      "path": "/content/SemEval2027-Task2/data/raw/dev/dico_nli_dev_track1_reference.csv",
+      "sha256": "8d5cd11c1c60df3c9b59254d12a60fb2cf43e91dde01b46c8a8f296b806134bc",
+      "upstream_manifest": {
+        "files": {
+          "dev/dico_nli_dev_track1_participant_labeled.csv": {
+            "sha256": "80b7152f7ccf0d349d42ad2f098988106689b918b36337e5756b121d17513511",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_participant_labeled.csv"
+          },
+          "dev/dico_nli_dev_track1_reference.csv": {
+            "sha256": "8d5cd11c1c60df3c9b59254d12a60fb2cf43e91dde01b46c8a8f296b806134bc",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_reference.csv"
+          },
+          "dev/dico_nli_dev_track1_submission_template.csv": {
+            "sha256": "28541a99b346cb7ab514b76bbf37d95e86be26bb3679c040fd1ab538824baa52",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_submission_template.csv"
+          },
+          "train/dico_nli_train_track1_participant_labeled.csv": {
+            "sha256": "5e8dd9f3a7e000933fec3c9e64d064f9a25586f141f58d6e6afb47c4fc797211",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_participant_labeled.csv"
+          },
+          "train/dico_nli_train_track1_reference.csv": {
+            "sha256": "c8f4d8587711e0beaefc115606e5c29c3e78dc6660e074967428af0fed069ee4",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_reference.csv"
+          },
+          "train/dico_nli_train_track1_submission_template.csv": {
+            "sha256": "d38ee22049b79fd2030a96fca68c7df4f04ef37aac91a6868b2dc6e9661905e8",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_submission_template.csv"
+          }
+        },
+        "repository": "https://github.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI",
+        "revision": "588968e610197ddc4c440314701cbc587afc4c1b"
+      }
+    },
+    "train": {
+      "path": "/content/SemEval2027-Task2/data/raw/train/dico_nli_train_track1_participant_labeled.csv",
+      "sha256": "5e8dd9f3a7e000933fec3c9e64d064f9a25586f141f58d6e6afb47c4fc797211",
+      "upstream_manifest": {
+        "files": {
+          "dev/dico_nli_dev_track1_participant_labeled.csv": {
+            "sha256": "80b7152f7ccf0d349d42ad2f098988106689b918b36337e5756b121d17513511",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_participant_labeled.csv"
+          },
+          "dev/dico_nli_dev_track1_reference.csv": {
+            "sha256": "8d5cd11c1c60df3c9b59254d12a60fb2cf43e91dde01b46c8a8f296b806134bc",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_reference.csv"
+          },
+          "dev/dico_nli_dev_track1_submission_template.csv": {
+            "sha256": "28541a99b346cb7ab514b76bbf37d95e86be26bb3679c040fd1ab538824baa52",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/dev/dico_nli_dev_track1_submission_template.csv"
+          },
+          "train/dico_nli_train_track1_participant_labeled.csv": {
+            "sha256": "5e8dd9f3a7e000933fec3c9e64d064f9a25586f141f58d6e6afb47c4fc797211",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_participant_labeled.csv"
+          },
+          "train/dico_nli_train_track1_reference.csv": {
+            "sha256": "c8f4d8587711e0beaefc115606e5c29c3e78dc6660e074967428af0fed069ee4",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_reference.csv"
+          },
+          "train/dico_nli_train_track1_submission_template.csv": {
+            "sha256": "d38ee22049b79fd2030a96fca68c7df4f04ef37aac91a6868b2dc6e9661905e8",
+            "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/final_data/train/dico_nli_train_track1_submission_template.csv"
+          }
+        },
+        "repository": "https://github.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI",
+        "revision": "588968e610197ddc4c440314701cbc587afc4c1b"
+      }
+    }
+  },
+  "decode": "independent",
+  "deterministic": false,
+  "dev_file": "data/raw/dev/dico_nli_dev_track1_participant_labeled.csv",
+  "dev_rows": 660,
+  "device": "cuda",
+  "epochs": 8,
+  "git_commit": "7d6727747fae13ee2d73950a8c5903174e221dba",
+  "git_dirty": true,
+  "git_status": "M .gitignore\n M Makefile\n M README.md\n M pyproject.toml\n M scripts/bootstrap_windows.ps1\n M scripts/fetch_official_assets.py\n M src/dico_nli/data.py\n M src/dico_nli/decode.py\n M src/dico_nli/metrics.py\n M src/dico_nli/predict.py\n M src/dico_nli/score.py\n M src/dico_nli/train.py\n M tests/test_decode.py\n?? AGENTS.md\n?? docs/\n?? requirements-lock.txt\n?? src/dico_nli/compare.py\n?? src/dico_nli/experiments.py\n?? tests/conftest.py\n?? tests/test_cpu_smoke.py\n?? tests/test_data.py\n?? tests/test_experiments.py\n?? tests/test_fetch.py\n?? tests/test_official.py",
+  "hardware": {
+    "cuda_available": true,
+    "cuda_runtime": "13.0",
+    "device": "cuda",
+    "gpu_memory_bytes": 15637086208,
+    "gpu_name": "Tesla T4",
+    "mps_available": false,
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]"
+  },
+  "label_order": [
+    "EQUIVALENCE",
+    "FORWARD_ENTAILMENT",
+    "BACKWARD_ENTAILMENT",
+    "NEGATIVE_OTHER"
+  ],
+  "learning_rate": 2e-05,
+  "max_length": 128,
+  "model_name": "microsoft/deberta-v3-base",
+  "model_revision": "8ccc9b6f36199bec6961081d44eb72fb3f7353f3",
+  "num_workers": 0,
+  "official_cache": ".cache/official_dico_nli",
+  "official_scorer_files": {
+    "__init__.py": "5e5ff6d6fd58b01638a8fd7ee7f482431bff837d134a0e79e5bfe0a5705baa15",
+    "__main__.py": "f27cadcf05f172d2b853cb371ab3f99b098287f0ddbe0e19179df8a1143962fa",
+    "aggregation.py": "a8ab594ca319c5c1eeeaa7307e427d028614cb65e37d5e95f2efaf60dfac4fc0",
+    "cli.py": "00062311915e28170b71b4a524cf270381c6b8256660c45f3d182d603cb95540",
+    "errors.py": "00173f95a00c80e8190a8e73f2b452856c11a8eaaee72608a03cffb47f2cb128",
+    "io.py": "a87e368e154c4cd7350142d1af5a4c83041a81f68d18dbbc9b5f5bc2297c4cd1",
+    "labels.py": "d500de7a8ef68460322516e4cbf431e19387e7555e9a4c2b2673dd727b17a98f",
+    "metrics.py": "448c0fd72b149b091216b9a65bfbf88b3744aa124f20e5c241c51ff33f7efd7e",
+    "schemas.py": "3a8cbca1ae93ba547d23bcf9c8eec0de2cf803f5fdc63166e7ad3fbb243c3193",
+    "scorer.py": "076c5956e82fffe6234f1cecb3351f555c92f3d61798eab30f68e0116a7c038f",
+    "templates.py": "ded61fc53ddbdebd25f27ed01730012693f742dd210654d61392603ce4892c27",
+    "validation.py": "bb6258b41b1312fc88e5851bf9bb8615694c3600b0ef73643bc1cdff7720b9ea"
+  },
+  "official_scorer_provenance": {
+    "files": {
+      "LICENSE": {
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/LICENSE"
+      },
+      "evaluation_functions/README.md": {
+        "sha256": "39901ba138b27d5d0ae3af739e3314915a6db51d1b9ce04dc06dd9e49ad7b23d",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/README.md"
+      },
+      "evaluation_functions/__init__.py": {
+        "sha256": "5e5ff6d6fd58b01638a8fd7ee7f482431bff837d134a0e79e5bfe0a5705baa15",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/__init__.py"
+      },
+      "evaluation_functions/__main__.py": {
+        "sha256": "f27cadcf05f172d2b853cb371ab3f99b098287f0ddbe0e19179df8a1143962fa",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/__main__.py"
+      },
+      "evaluation_functions/aggregation.py": {
+        "sha256": "a8ab594ca319c5c1eeeaa7307e427d028614cb65e37d5e95f2efaf60dfac4fc0",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/aggregation.py"
+      },
+      "evaluation_functions/cli.py": {
+        "sha256": "00062311915e28170b71b4a524cf270381c6b8256660c45f3d182d603cb95540",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/cli.py"
+      },
+      "evaluation_functions/errors.py": {
+        "sha256": "00173f95a00c80e8190a8e73f2b452856c11a8eaaee72608a03cffb47f2cb128",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/errors.py"
+      },
+      "evaluation_functions/io.py": {
+        "sha256": "a87e368e154c4cd7350142d1af5a4c83041a81f68d18dbbc9b5f5bc2297c4cd1",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/io.py"
+      },
+      "evaluation_functions/labels.py": {
+        "sha256": "d500de7a8ef68460322516e4cbf431e19387e7555e9a4c2b2673dd727b17a98f",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/labels.py"
+      },
+      "evaluation_functions/metrics.py": {
+        "sha256": "448c0fd72b149b091216b9a65bfbf88b3744aa124f20e5c241c51ff33f7efd7e",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/metrics.py"
+      },
+      "evaluation_functions/schemas.py": {
+        "sha256": "3a8cbca1ae93ba547d23bcf9c8eec0de2cf803f5fdc63166e7ad3fbb243c3193",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/schemas.py"
+      },
+      "evaluation_functions/scorer.py": {
+        "sha256": "076c5956e82fffe6234f1cecb3351f555c92f3d61798eab30f68e0116a7c038f",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/scorer.py"
+      },
+      "evaluation_functions/templates.py": {
+        "sha256": "ded61fc53ddbdebd25f27ed01730012693f742dd210654d61392603ce4892c27",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/templates.py"
+      },
+      "evaluation_functions/validation.py": {
+        "sha256": "bb6258b41b1312fc88e5851bf9bb8615694c3600b0ef73643bc1cdff7720b9ea",
+        "url": "https://raw.githubusercontent.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI/588968e610197ddc4c440314701cbc587afc4c1b/evaluation_functions/validation.py"
+      }
+    },
+    "repository": "https://github.com/ilopezgazpio/SemEval-2027-Task-2-DiCo-NLI",
+    "revision": "588968e610197ddc4c440314701cbc587afc4c1b"
+  },
+  "output_dir": "/content/drive/MyDrive/DiCoNLI/experiments",
+  "patience": 3,
+  "reference_file": "data/raw/dev/dico_nli_dev_track1_reference.csv",
+  "resolved_model_revision": "8ccc9b6f36199bec6961081d44eb72fb3f7353f3",
+  "run_id": "20261104T000315Z-7162c5fd",
+  "run_kind": "training",
+  "seed": 42,
+  "selection_metric": "weighted_f1",
+  "software_versions": "software_versions.json",
+  "source_files_sha256": {
+    "AGENTS.md": "4fa0ba3f875ce937e49a4f4313035661511d2458cd6821df4433fc3759da7d18",
+    "Makefile": "1ada18e7c5b71abd000fc689ce40c208ab74ae3f2001388b25e42333b4ee7185",
+    "pyproject.toml": "9d4648558b1d100e03fef7ba027e561a1b8d1eaa1d465ccd9ad67bb7fab8a98e",
+    "requirements-lock.txt": "ae44d10c976c884563d29726ee04bd2a556b9a5f81252516dbbe384d6249c90e",
+    "scripts/bootstrap_windows.ps1": "c078c66492ea9d3e32cdd97d4ac6736a107b3a35e20817e13bc0962b6a0b18f0",
+    "scripts/fetch_official_assets.py": "a2afe1dce496ccce7f669bfd2ad650cfb7e4819bba8468f7ab1122487c423743",
+    "src/dico_nli/__init__.py": "3810ce91500c7f87f335fc7c63bd05a539e745992049b24d327d948fe7da4120",
+    "src/dico_nli/compare.py": "e696c4efd56d9092c1c12a2625acb3d48337f728c704c6fba0640404299dfa86",
+    "src/dico_nli/data.py": "b0d226a5297d09315349b91d33a3b067d3b1563d7a0876092fda51097ba31aec",
+    "src/dico_nli/decode.py": "5298bd351fd6bdde40127816f74452b7e4d73b2b04fcf304dd88c92da448f250",
+    "src/dico_nli/experiments.py": "ba296a1de6ca07d1b0a5ecacaec50dcd22f2121b6adf941eff8716916cf50930",
+    "src/dico_nli/labels.py": "3ef113303cc7cb2516f9ab4fdeb3b5103d2a1a6e7171931b2b8b58c26ca04f66",
+    "src/dico_nli/metrics.py": "dcf4d2f4d3b5233bbda7e2405b0b2981e020b48de67cdb5e3ea76c08dc306f83",
+    "src/dico_nli/predict.py": "4a43fa3e6e20938478ae4e8e0ace8686bc641ed69f2072f92564e0119026de53",
+    "src/dico_nli/score.py": "9e38dc44609bb58868de74e97e8f02313f6eb3bc52a9df7d7d9c473764205ccd",
+    "src/dico_nli/train.py": "bfa3475172cb1c9a446026d01c861edab1d8f0158148e654865acac10a0e5764"
+  },
+  "source_snapshot": "source_snapshot",
+  "started_at": "2026-11-04T00:03:15.995645+00:00",
+  "train_file": "data/raw/train/dico_nli_train_track1_participant_labeled.csv",
+  "train_rows": 3042,
+  "warmup_ratio": 0.1,
+  "weight_decay": 0.01
+}

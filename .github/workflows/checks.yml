@@ -18,3 +18,7 @@ jobs:
         env:
           HF_HUB_OFFLINE: '1'
           TRANSFORMERS_OFFLINE: '1'
+      - run: python scripts/analyze_saved_runs.py
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
